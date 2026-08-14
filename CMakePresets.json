@@ -1,0 +1,72 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 23, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "default",
+      "displayName": "Debug (library + examples)",
+      "description": "vcpkg 툴체인 사용, LLM_CLIENT_BUILD_EXAMPLES=ON (example_chat 포함)",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "LLM_CLIENT_BUILD_EXAMPLES": "ON"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release (library + examples)",
+      "inherits": "default",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "lib-only",
+      "displayName": "Release (library only)",
+      "description": "example_chat 없이 라이브러리만 빌드 (replxx/termcolor 불필요)",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "LLM_CLIENT_BUILD_EXAMPLES": "OFF"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "default", "configurePreset": "default" },
+    { "name": "release", "configurePreset": "release" },
+    { "name": "lib-only", "configurePreset": "lib-only" }
+  ],
+  "workflowPresets": [
+    {
+      "name": "default",
+      "steps": [
+        { "type": "configure", "name": "default" },
+        { "type": "build", "name": "default" }
+      ]
+    },
+    {
+      "name": "release",
+      "steps": [
+        { "type": "configure", "name": "release" },
+        { "type": "build", "name": "release" }
+      ]
+    },
+    {
+      "name": "lib-only",
+      "steps": [
+        { "type": "configure", "name": "lib-only" },
+        { "type": "build", "name": "lib-only" }
+      ]
+    }
+  ]
+}
