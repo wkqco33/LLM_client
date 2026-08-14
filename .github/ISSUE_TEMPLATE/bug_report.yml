@@ -1,0 +1,47 @@
+name: Bug Report
+description: 버그를 신고해 주세요.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: 버그 설명
+      description: 무엇이 어떻게 잘못 동작하나요?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 재현 방법
+      description: 재현을 위한 단계/코드/예제를 알려주세요.
+      render: shell
+    validations:
+      required: false
+  - type: dropdown
+    id: provider
+    attributes:
+      label: 프로바이더
+      description: 어떤 프로바이더에서 발생했나요?
+      options:
+        - openai
+        - azure
+        - ollama
+        - custom
+        - 해당 없음 / 기타
+    validations:
+      required: false
+  - type: input
+    id: env
+    attributes:
+      label: 환경
+      description: OS, 컴파일러, 라이브러리 버전 등
+      placeholder: "Ubuntu 22.04, GCC 13, C++17"
+    validations:
+      required: false
+  - type: textarea
+    id: expected
+    attributes:
+      label: 기대 동작
+    validations:
+      required: false

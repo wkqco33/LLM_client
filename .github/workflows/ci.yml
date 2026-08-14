@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build-and-test:
+    name: Build & Test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up vcpkg
+        uses: lukka/run-vcpkg@v11
+        id: runvcpkg
+        with:
+          vcpkgJsonGlob: 'vcpkg.json'
+
+      - name: Configure, build & test (ci preset)
+        uses: lukka/run-cmake@v10
+        with:
+          configurePreset: ci
+          buildPreset: ci
+          testPreset: ci
+
+  python-binding:
+    name: Python binding check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Compile-check Python binding
+        run: |
+          python -m py_compile bindings/python/llm_client.py
+          echo "Python binding compiles OK."

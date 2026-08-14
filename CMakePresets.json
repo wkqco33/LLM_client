@@ -39,12 +39,33 @@
         "CMAKE_BUILD_TYPE": "Release",
         "LLM_CLIENT_BUILD_EXAMPLES": "OFF"
       }
+    },
+    {
+      "name": "ci",
+      "displayName": "CI (library + tests, Release)",
+      "description": "CI용: 예제 없이 라이브러리와 테스트만 빌드",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "LLM_CLIENT_BUILD_EXAMPLES": "OFF",
+        "LLM_CLIENT_BUILD_TESTS": "ON"
+      }
     }
   ],
   "buildPresets": [
     { "name": "default", "configurePreset": "default" },
     { "name": "release", "configurePreset": "release" },
-    { "name": "lib-only", "configurePreset": "lib-only" }
+    { "name": "lib-only", "configurePreset": "lib-only" },
+    { "name": "ci", "configurePreset": "ci" }
+  ],
+  "testPresets": [
+    {
+      "name": "ci",
+      "configurePreset": "ci",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
   ],
   "workflowPresets": [
     {
@@ -66,6 +87,14 @@
       "steps": [
         { "type": "configure", "name": "lib-only" },
         { "type": "build", "name": "lib-only" }
+      ]
+    },
+    {
+      "name": "ci",
+      "steps": [
+        { "type": "configure", "name": "ci" },
+        { "type": "build", "name": "ci" },
+        { "type": "test", "name": "ci" }
       ]
     }
   ]

@@ -1,5 +1,10 @@
 # C++ LLM Client Library
 
+[![CI](https://github.com/wkqco33/LLM_client/actions/workflows/ci.yml/badge.svg)](https://github.com/wkqco33/LLM_client/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://isocpp.org/)
+[![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS-lightgrey.svg)]()
+
 다양한 LLM 프로바이더(OpenAI, Azure OpenAI, Ollama, Custom API)를 C++ 환경에서 일관되게 사용할 수 있도록 도와주는 경량 클라이언트 라이브러리입니다. 특정 프레임워크에 종속되지 않아 어떤 C++ 프로젝트에도 쉽게 통합할 수 있도록 설계되었으며, ROS2 패키지 역시 통합 가능한 예시 중 하나입니다.
 
 ## 특징 (Features)

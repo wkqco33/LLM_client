@@ -67,15 +67,21 @@ if(LLM_CLIENT_BUILD_EXAMPLES)
 endif()
 
 if(LLM_CLIENT_BUILD_TESTS)
+    enable_testing()
+
     add_executable(test_async tests/test_async.cpp)
     target_link_libraries(test_async PRIVATE llm_client)
+    add_test(NAME test_async COMMAND test_async)
 
     add_executable(test_multimodal tests/test_multimodal.cpp)
     target_link_libraries(test_multimodal PRIVATE llm_client)
+    add_test(NAME test_multimodal COMMAND test_multimodal)
 
     add_executable(test_session tests/test_session.cpp)
     target_link_libraries(test_session PRIVATE llm_client)
+    add_test(NAME test_session COMMAND test_session)
 
     add_executable(test_embedding tests/test_embedding.cpp)
     target_link_libraries(test_embedding PRIVATE llm_client)
+    add_test(NAME test_embedding COMMAND test_embedding)
 endif()
