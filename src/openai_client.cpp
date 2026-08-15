@@ -1,4 +1,5 @@
 #include "llm_client/openai_client.hpp"
+#include "llm_client/cpr_http_client.hpp"
 #include "llm_client/exceptions.hpp"
 #include "llm_client/http_util.hpp"
 #include "llm_client/logger.hpp"
@@ -44,8 +45,11 @@ json buildRequestBody(const std::vector<Message> &messages,
 } // namespace
 
 OpenAIClient::OpenAIClient(const std::string &api_key,
-                           const std::string &base_url)
-    : api_key_(api_key), base_url_(base_url) {}
+                           const std::string &base_url,
+                           std::shared_ptr<IHttpClient> http_client)
+    : api_key_(api_key), base_url_(base_url),
+      http_client_(http_client ? std::move(http_client)
+                               : std::make_shared<CprHttpClient>()) {}
 
 ResponseData OpenAIClient::chat(const std::vector<Message> &messages,
                                 const RequestParams &params) {
@@ -55,11 +59,12 @@ ResponseData OpenAIClient::chat(const std::vector<Message> &messages,
   json j_req = buildRequestBody(messages, params, model, /*streaming=*/false);
 
   std::string endpoint = base_url_ + "/chat/completions";
-  cpr::Header headers{{"Authorization", "Bearer " + api_key_},
-                      {"Content-Type", "application/json"}};
+  std::map<std::string, std::string> headers{
+      {"Authorization", "Bearer " + api_key_},
+      {"Content-Type", "application/json"}};
 
-  // HTTP POST 및 공통 예외/로깅 처리
-  json j_res = detail::http_post_json(endpoint, headers, j_req, "OpenAI",
+  json j_res = detail::http_post_json(*http_client_, endpoint, headers, j_req,
+                                      "OpenAI",
                                       params.timeout_ms.value_or(30000),
                                       params.max_retries.value_or(0));
 
@@ -104,14 +109,15 @@ ResponseData OpenAIClient::chatStream(const std::vector<Message> &messages,
   json j_req = buildRequestBody(messages, params, model, /*streaming=*/true);
 
   std::string endpoint = base_url_ + "/chat/completions";
-  cpr::Header headers{{"Authorization", "Bearer " + api_key_},
-                      {"Content-Type", "application/json"}};
+  std::map<std::string, std::string> headers{
+      {"Authorization", "Bearer " + api_key_},
+      {"Content-Type", "application/json"}};
 
   ResponseData response_data;
   response_data.model = model;
 
   detail::http_post_stream(
-      endpoint, headers, j_req, "OpenAI",
+      *http_client_, endpoint, headers, j_req, "OpenAI",
       [&response_data, &callback](const std::string &line) {
         detail::parse_stream_json_line(line, "OpenAIClient", [&](const json &j) {
           if (j.contains("choices") && j["choices"].is_array() &&
@@ -150,10 +156,12 @@ EmbeddingResponse OpenAIClient::embed(const std::vector<std::string> &inputs,
   j_req["input"] = inputs;
 
   std::string endpoint = base_url_ + "/embeddings";
-  cpr::Header headers{{"Authorization", "Bearer " + api_key_},
-                      {"Content-Type", "application/json"}};
+  std::map<std::string, std::string> headers{
+      {"Authorization", "Bearer " + api_key_},
+      {"Content-Type", "application/json"}};
 
-  json j_res = detail::http_post_json(endpoint, headers, j_req, "OpenAI",
+  json j_res = detail::http_post_json(*http_client_, endpoint, headers, j_req,
+                                      "OpenAI",
                                       params.timeout_ms.value_or(30000),
                                       params.max_retries.value_or(0));
 

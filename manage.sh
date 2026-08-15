@@ -38,6 +38,7 @@ function print_help() {
     echo ""
     echo "명령어:"
     echo "  build    - 빌드 및 의존성 설치 진행"
+    echo "  test     - 단위 테스트 (GoogleTest / CTest) 실행"
     echo "  clean    - 빌드 결과물(build 폴더) 삭제"
     echo "  deps     - vcpkg를 통한 종속성 수동 설치"
     echo "  install  - 빌드된 결과물을 시스템에 설치"
@@ -129,6 +130,21 @@ function run() {
     fi
 }
 
+function run_tests() {
+    echo "🧪 단위 테스트 실행 중..."
+    if [ ! -d "$BUILD_DIR" ]; then
+        echo "⚠️ 빌드 폴더가 없습니다. 먼저 빌드를 진행합니다."
+        build
+    fi
+    cd "$BUILD_DIR"
+    if [ -f "unit_tests" ]; then
+        ./unit_tests --gtest_color=yes
+    else
+        ctest --output-on-failure
+    fi
+    echo "✅ 테스트 완료"
+}
+
 if [ $# -eq 0 ]; then
     print_help
     exit 0
@@ -136,6 +152,7 @@ fi
 
 case "$1" in
     build) build ;;
+    test) run_tests ;;
     clean) clean ;;
     deps) deps ;;
     install) install_target ;;

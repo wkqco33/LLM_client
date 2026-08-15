@@ -1,37 +1,46 @@
-#include "llm_client/types.hpp"
 #include "llm_client/http_util.hpp"
-#include <iostream>
-#include <cassert>
+#include "llm_client/types.hpp"
+#include <gtest/gtest.h>
 
-int main() {
-    std::cout << "[Test Multimodal Schema]" << std::endl;
+using namespace llm_client;
 
-    llm_client::Message msg;
-    msg.role = "user";
-    msg.blocks.push_back(llm_client::ContentBlock::makeText("Describe this image"));
-    msg.blocks.push_back(llm_client::ContentBlock::makeImageUrl("https://example.com/image.jpg"));
-    msg.blocks.push_back(llm_client::ContentBlock::makeImageBase64("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==", "image/png"));
+TEST(MultimodalTest, BuildRoleContentMessagesWithMultipleBlocks) {
+  Message msg;
+  msg.role = "user";
+  msg.blocks.push_back(ContentBlock::makeText("Describe this image"));
+  msg.blocks.push_back(ContentBlock::makeImageUrl("https://example.com/image.jpg"));
+  msg.blocks.push_back(ContentBlock::makeImageBase64(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+      "image/png"));
 
-    std::vector<llm_client::Message> messages = { msg };
-    nlohmann::json j_messages = llm_client::detail::build_role_content_messages(messages);
+  std::vector<Message> messages = {msg};
+  nlohmann::json j_messages = detail::build_role_content_messages(messages);
 
-    std::cout << "Serialized messages JSON:\n" << j_messages.dump(2) << std::endl;
+  ASSERT_TRUE(j_messages.is_array());
+  ASSERT_EQ(j_messages.size(), 1);
+  EXPECT_EQ(j_messages[0]["role"], "user");
 
-    assert(j_messages.is_array());
-    assert(j_messages[0]["role"] == "user");
-    assert(j_messages[0]["content"].is_array());
-    assert(j_messages[0]["content"].size() == 3);
-    assert(j_messages[0]["content"][0]["type"] == "text");
-    assert(j_messages[0]["content"][1]["type"] == "image_url");
-    assert(j_messages[0]["content"][2]["image_url"]["url"].get<std::string>().rfind("data:image/png;base64,", 0) == 0);
+  const auto &content = j_messages[0]["content"];
+  ASSERT_TRUE(content.is_array());
+  ASSERT_EQ(content.size(), 3);
+  EXPECT_EQ(content[0]["type"], "text");
+  EXPECT_EQ(content[0]["text"], "Describe this image");
 
-    llm_client::RequestParams params;
-    params.response_format = "json_object";
-    params.json_schema = R"({"name": "user", "strict": true})";
+  EXPECT_EQ(content[1]["type"], "image_url");
+  EXPECT_EQ(content[1]["image_url"]["url"], "https://example.com/image.jpg");
 
-    assert(params.response_format.value() == "json_object");
-    assert(!params.json_schema.value().empty());
+  EXPECT_EQ(content[2]["type"], "image_url");
+  std::string data_url = content[2]["image_url"]["url"].get<std::string>();
+  EXPECT_EQ(data_url.rfind("data:image/png;base64,", 0), 0);
+}
 
-    std::cout << "Multimodal & Structured Output schema test passed!" << std::endl;
-    return 0;
+TEST(MultimodalTest, RequestParamsStructuredOutput) {
+  RequestParams params;
+  params.response_format = "json_object";
+  params.json_schema = R"({"name": "user", "strict": true})";
+
+  ASSERT_TRUE(params.response_format.has_value());
+  EXPECT_EQ(params.response_format.value(), "json_object");
+  ASSERT_TRUE(params.json_schema.has_value());
+  EXPECT_FALSE(params.json_schema.value().empty());
 }

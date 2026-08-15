@@ -1,4 +1,5 @@
 #include "llm_client/ollama_client.hpp"
+#include "llm_client/cpr_http_client.hpp"
 #include "llm_client/exceptions.hpp"
 #include "llm_client/http_util.hpp"
 #include "llm_client/logger.hpp"
@@ -35,9 +36,12 @@ json buildRequestBody(const std::vector<Message> &messages,
 } // namespace
 
 OllamaClient::OllamaClient(const std::string &base_url,
-                           const std::string &api_key)
+                           const std::string &api_key,
+                           std::shared_ptr<IHttpClient> http_client)
     : base_url_(base_url.empty() ? "http://localhost:11434" : base_url),
-      api_key_(api_key) {}
+      api_key_(api_key),
+      http_client_(http_client ? std::move(http_client)
+                               : std::make_shared<CprHttpClient>()) {}
 
 ResponseData OllamaClient::chat(const std::vector<Message> &messages,
                                 const RequestParams &params) {
@@ -47,13 +51,13 @@ ResponseData OllamaClient::chat(const std::vector<Message> &messages,
   json j_req = buildRequestBody(messages, params, model, /*streaming=*/false);
 
   std::string endpoint = base_url_ + "/api/chat";
-  cpr::Header headers{{"Content-Type", "application/json"}};
+  std::map<std::string, std::string> headers{{"Content-Type", "application/json"}};
   if (!api_key_.empty()) {
     headers["Authorization"] = "Bearer " + api_key_;
   }
 
-  // HTTP POST 및 공통 예외/로깅 처리
-  json j_res = detail::http_post_json(endpoint, headers, j_req, "Ollama",
+  json j_res = detail::http_post_json(*http_client_, endpoint, headers, j_req,
+                                      "Ollama",
                                       params.timeout_ms.value_or(60000),
                                       params.max_retries.value_or(0));
 
@@ -102,7 +106,7 @@ ResponseData OllamaClient::chatStream(const std::vector<Message> &messages,
   json j_req = buildRequestBody(messages, params, model, /*streaming=*/true);
 
   std::string endpoint = base_url_ + "/api/chat";
-  cpr::Header headers{{"Content-Type", "application/json"}};
+  std::map<std::string, std::string> headers{{"Content-Type", "application/json"}};
   if (!api_key_.empty()) {
     headers["Authorization"] = "Bearer " + api_key_;
   }
@@ -111,7 +115,7 @@ ResponseData OllamaClient::chatStream(const std::vector<Message> &messages,
   response_data.model = model;
 
   detail::http_post_stream(
-      endpoint, headers, j_req, "Ollama",
+      *http_client_, endpoint, headers, j_req, "Ollama",
       [&response_data, &callback](const std::string &line) {
         detail::parse_stream_json_line(
             line, "OllamaClient",
@@ -160,12 +164,13 @@ EmbeddingResponse OllamaClient::embed(const std::vector<std::string> &inputs,
   j_req["input"] = inputs;
 
   std::string endpoint = base_url_ + "/api/embed";
-  cpr::Header headers{{"Content-Type", "application/json"}};
+  std::map<std::string, std::string> headers{{"Content-Type", "application/json"}};
   if (!api_key_.empty()) {
     headers["Authorization"] = "Bearer " + api_key_;
   }
 
-  json j_res = detail::http_post_json(endpoint, headers, j_req, "Ollama",
+  json j_res = detail::http_post_json(*http_client_, endpoint, headers, j_req,
+                                      "Ollama",
                                       params.timeout_ms.value_or(60000),
                                       params.max_retries.value_or(0));
 

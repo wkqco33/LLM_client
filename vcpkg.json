@@ -2,12 +2,13 @@
   "name": "llm-client",
   "version-string": "0.1.0",
   "description": "C++ LLM Client library supporting OpenAI, Azure OpenAI, Ollama and Custom providers",
-  "builtin-baseline": "9c16a692ff11ec926f5dffe67c7b506329504227",
+  "builtin-baseline": "4f6d4ae8247b2dcae554555a135e52bb449dd524",
   "dependencies": [
     "cpr",
     "nlohmann-json",
     "spdlog",
     "replxx",
-    "termcolor"
+    "termcolor",
+    "gtest"
   ]
 }

@@ -68,20 +68,26 @@ endif()
 
 if(LLM_CLIENT_BUILD_TESTS)
     enable_testing()
+    find_package(GTest CONFIG REQUIRED)
 
-    add_executable(test_async tests/test_async.cpp)
-    target_link_libraries(test_async PRIVATE llm_client)
-    add_test(NAME test_async COMMAND test_async)
+    set(TEST_SOURCES
+        tests/test_openai_client.cpp
+        tests/test_azure_openai_client.cpp
+        tests/test_ollama_client.cpp
+        tests/test_c_abi.cpp
+        tests/test_session.cpp
+        tests/test_async.cpp
+        tests/test_embedding.cpp
+        tests/test_multimodal.cpp
+    )
 
-    add_executable(test_multimodal tests/test_multimodal.cpp)
-    target_link_libraries(test_multimodal PRIVATE llm_client)
-    add_test(NAME test_multimodal COMMAND test_multimodal)
+    add_executable(unit_tests ${TEST_SOURCES})
+    target_link_libraries(unit_tests PRIVATE
+        llm_client
+        GTest::gtest
+        GTest::gtest_main
+    )
 
-    add_executable(test_session tests/test_session.cpp)
-    target_link_libraries(test_session PRIVATE llm_client)
-    add_test(NAME test_session COMMAND test_session)
-
-    add_executable(test_embedding tests/test_embedding.cpp)
-    target_link_libraries(test_embedding PRIVATE llm_client)
-    add_test(NAME test_embedding COMMAND test_embedding)
+    include(GoogleTest)
+    gtest_discover_tests(unit_tests)
 endif()
