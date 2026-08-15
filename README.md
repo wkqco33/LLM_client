@@ -28,6 +28,7 @@
 | `openai` | `api.openai.com/v1` 호환 | `gpt-4o` | O (`text-embedding-3-small`) |
 | `azure` | Microsoft Azure OpenAI Service (`base_url` 필수) | `gpt-4.1` (배포명 기준, reasoning 계열은 자동으로 `max_completion_tokens` 사용) | O (임베딩 모델 배포명 지정) |
 | `ollama` | 로컬/원격 Ollama 서버 (`http://localhost:11434` 기본값) | `llama3` | O (`nomic-embed-text`, 별도 `ollama pull` 필요) |
+| `onnx` | 로컬 `.onnx` 모델 파일 직접 추론 (`base_url`에 모델 파일 경로 전달) | 지정된 로컬 모델 파일 | O (Mean pooling / Hidden state) |
 | `custom` | OpenAI 호환 서버(vLLM 등), `base_url` 필수 | 사용자 지정 | 서버가 OpenAI 호환 `/embeddings`를 구현했다면 O |
 
 각 프로바이더의 기본 모델은 `params.model`을 지정하지 않았을 때만 사용되는 기본값이며, 언제든 `RequestParams::model`(임베딩은 `EmbeddingParams::model`)로 원하는 모델/배포명을 지정할 수 있습니다.

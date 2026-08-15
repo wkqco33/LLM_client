@@ -18,24 +18,23 @@ find_package(cpr CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 
-# 인터페이스 및 라이브러리 정의
-add_library(llm_client 
+# 인터페이스 및 라이브러리 소스
+set(LLM_CLIENT_SOURCES
     src/llm_client.cpp
     src/openai_client.cpp
     src/azure_openai_client.cpp
     src/ollama_client.cpp
+    src/onnx_client.cpp
+    src/simple_tokenizer.cpp
     src/llm_client_c.cpp
 )
+
+# C++ Core 정적 라이브러리
+add_library(llm_client ${LLM_CLIENT_SOURCES})
 target_include_directories(llm_client PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
 # C ABI 공유 라이브러리 (Python/Go/Dart 바인딩용)
-add_library(llm_client_shared SHARED
-    src/llm_client.cpp
-    src/openai_client.cpp
-    src/azure_openai_client.cpp
-    src/ollama_client.cpp
-    src/llm_client_c.cpp
-)
+add_library(llm_client_shared SHARED ${LLM_CLIENT_SOURCES})
 target_include_directories(llm_client_shared PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 set_target_properties(llm_client_shared PROPERTIES OUTPUT_NAME "llm_client")
 
@@ -74,6 +73,7 @@ if(LLM_CLIENT_BUILD_TESTS)
         tests/test_openai_client.cpp
         tests/test_azure_openai_client.cpp
         tests/test_ollama_client.cpp
+        tests/test_onnx_client.cpp
         tests/test_c_abi.cpp
         tests/test_session.cpp
         tests/test_async.cpp

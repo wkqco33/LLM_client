@@ -3,6 +3,7 @@
 #include "llm_client/exceptions.hpp"
 #include "llm_client/logger.hpp"
 #include "llm_client/ollama_client.hpp"
+#include "llm_client/onnx_client.hpp"
 #include "llm_client/openai_client.hpp"
 
 namespace llm_client {
@@ -29,6 +30,13 @@ LLMClientFactory::create(const std::string &provider,
     return std::make_unique<OllamaClient>(
         base_url.empty() ? "http://localhost:11434" : base_url, api_key,
         std::move(http_client));
+  } else if (provider == "onnx") {
+    if (base_url.empty()) {
+      LLM_LOG_ERROR("Model path (base_url) is empty for onnx provider");
+      throw ConfigurationException("ONNX provider requires a model path in base_url.");
+    }
+    // base_url = model_path, api_version = tokenizer_path (옵션)
+    return std::make_unique<OnnxClient>(base_url, api_version);
   } else if (provider == "custom") {
     if (base_url.empty()) {
       LLM_LOG_ERROR("Base URL is empty for custom provider");

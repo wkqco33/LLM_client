@@ -12,6 +12,13 @@ TEST(CABITest, CreateAndDestroyClient) {
   ASSERT_NE(client_ollama, nullptr);
   llm_client_destroy(client_ollama);
 
+  llm_client_h client_onnx = llm_client_create("onnx", "", "/path/to/model.onnx", "/path/to/tokenizer.json");
+  ASSERT_NE(client_onnx, nullptr);
+  llm_client_destroy(client_onnx);
+
+  llm_client_h client_onnx_empty = llm_client_create("onnx", "", "", "");
+  EXPECT_EQ(client_onnx_empty, nullptr);
+
   llm_client_h client_invalid = llm_client_create("non_existent_provider", "", "", "");
   EXPECT_EQ(client_invalid, nullptr);
 
