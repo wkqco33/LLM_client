@@ -2,6 +2,25 @@
 
 이 프로젝트의 변경 사항을 기록합니다.
 
+## [0.2.0] - TDD 인프라 및 로컬 ONNX 모델 추론 지원
+ 
+### 신규 추가 (New Features)
+- **로컬 ONNX 모델 추론 클라이언트 (`OnnxClient`)**
+  - 로컬 `.onnx` 파일 기반 텍스트 생성(`chat`, `chatStream`) 및 임베딩(`embed`) 지원
+  - HuggingFace `tokenizer.json` 및 `vocab.json`을 지원하는 자체 토크나이저(`SimpleTokenizer`) 구현
+  - Greedy / Temperature / Top-P (Nucleus) 샘플링 지원
+  - 임베딩 생성 시 `last_hidden_state` 기반 Attention-weighted Mean Pooling 지원
+  - `LLMClientFactory` 및 C ABI에 `"onnx"` 프로바이더 연동
+
+- **TDD (Test-Driven Development) 아키텍처 및 GoogleTest 도입**
+  - HTTP 통신 추상화 인터페이스(`IHttpClient`) 및 의존성 주입(DI) 계층 구축
+  - 운영용 `CprHttpClient` 및 테스트용 `MockHttpClient` 분리
+  - ONNX 런타임 엔진 추상화(`IOnnxEngine`) 및 `MockOnnxEngine` 제공
+  - 9개 테스트 스위트, 35개 단위 테스트로 구성된 GoogleTest 기반 단위 테스트 프레임워크 구축 (`./manage.sh test`)
+  - AI 에이전트 및 개발자를 위한 [AGENTS.md](AGENTS.md) TDD 개발 가이드라인 추가
+
+---
+
 ## [0.1.0] - 초기 공개 (Initial Release)
 
 ### 신규 추가 (범용 C++ LLM 클라이언트 라이브러리 첫 공개)

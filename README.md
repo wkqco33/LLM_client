@@ -9,7 +9,10 @@
 
 ## 특징 (Features)
 
-- 단일 팩토리 인터페이스(`LLMClientFactory`)를 통한 다중 LLM 프로바이더 연동 지원
+- 단일 팩토리 인터페이스(`LLMClientFactory`)를 통한 다중 LLM 프로바이더(OpenAI, Azure OpenAI, Ollama, ONNX 로컬 모델, Custom) 연동 지원
+- **로컬 ONNX 모델 온디바이스 추론 지원 (`OnnxClient`)**: 로컬 `.onnx` 파일 및 토크나이저(`SimpleTokenizer`)를 통한 자체 텍스트 생성 및 Mean-pooling 기반 임베딩 지원
+- **TDD 친화적 아키텍처**: `IHttpClient` / `MockHttpClient` 및 `IOnnxEngine` / `MockOnnxEngine` 의존성 주입(DI) 계층으로 네트워크 및 외부 종속성 없이 100% 격리된 초고속 단위 테스트 지원
+- GoogleTest(GTest) 기반 35개 이상의 포괄적인 단위 테스트 스위트 내장 (`./manage.sh test`)
 - `cpr`(HTTP Client)과 `nlohmann-json` 라이브러리를 사용한 모던 C++ 구현 (C++17), `vcpkg`로 의존성 관리
 - 동기, SSE 기반 실시간 스트리밍 및 비동기 Future 기반 요청(`chatAsync`, `chatStreamAsync`, `generateAsync`) 지원
 - `ContentBlock` 멀티모달(텍스트, 이미지 URL, Base64) 및 Structured Output(`response_format`, `json_schema`) 지원
@@ -18,7 +21,7 @@
 - HTTP 타임아웃(`timeout_ms`) 및 네트워크 오류/429/5xx 자동 재시도(`max_retries`, 지수 백오프 + `Retry-After` 헤더 반영) 내장
 - Ollama(think) 등 reasoning 모델의 사고 과정을 `ResponseData.reasoning_content`로 수신 가능 (`RequestParams.thinking`)
 - C ABI 래퍼(`llm_client_c.h`) 및 공식 Python 래퍼(`bindings/python/llm_client.py`) 제공으로 타 언어(Python, Go, Dart)에서도 쉽게 바인딩 가능
-- RAG 등에 활용 가능한 임베딩(Embedding) API(`embed`, `embedAsync`) 지원 (OpenAI/Azure OpenAI/Ollama/Custom, C++/C ABI/Python 세 계층 모두 지원)
+- RAG 등에 활용 가능한 임베딩(Embedding) API(`embed`, `embedAsync`) 지원 (OpenAI/Azure OpenAI/Ollama/ONNX/Custom, C++/C ABI/Python 세 계층 모두 지원)
 - 특정 프레임워크에 종속되지 않는 독립적인 의존성 그래프로 ROS2 등 어떤 C++ 프로젝트에도 통합 가능
 
 ## 프로바이더 지원 (Providers)
@@ -35,23 +38,26 @@
 
 ---
 
-## 빌드 및 설치 (Build Instructions)
+## 빌드 및 테스트 (Build & Test Instructions)
 
 본 라이브러리는 `vcpkg`를 패키지 매니저로 사용합니다. 사전에 vcpkg가 설치되어 있어야 합니다 (`VCPKG_ROOT` 환경 변수 또는 `~/Tools/vcpkg`, macOS Homebrew 환경을 자동 인식합니다).
 
-제공되는 관리 스크립트(`manage.sh`)를 사용하면 쉽게 빌드할 수 있습니다:
+제공되는 관리 스크립트(`manage.sh`)를 사용하면 쉽게 빌드 및 테스트할 수 있습니다:
 
 ```bash
 # 권한 부여 (최초 1회)
 chmod +x manage.sh
 
-# 빌드 및 의존성 자동 설치 진행 (vcpkg manifest 모드로 cpr/nlohmann-json/spdlog 등 자동 설치)
+# 1. 빌드 및 의존성 자동 설치 진행 (vcpkg manifest 모드로 cpr/nlohmann-json/spdlog/gtest 등 자동 설치)
 ./manage.sh build
 
-# 빌드된 예제 실행해보기
+# 2. 단위 테스트 전체 실행 (GoogleTest)
+./manage.sh test
+
+# 3. 빌드된 예제 실행해보기
 ./manage.sh run
 
-# 프로젝트 초기화 (build 폴더 삭제)
+# 4. 프로젝트 초기화 (build 폴더 삭제)
 ./manage.sh clean
 ```
 
@@ -106,6 +112,10 @@ int main() {
     try {
         // OpenAI 예시
         auto client = llm_client::LLMClientFactory::create("openai", "YOUR_API_KEY");
+
+        // ONNX 로컬 모델 예시 (base_url에 .onnx 경로, api_version에 tokenizer.json 경로 전달)
+        // auto onnx_client = llm_client::LLMClientFactory::create(
+        //     "onnx", "", "/path/to/model.onnx", "/path/to/tokenizer.json");
 
         // Azure OpenAI 예시 (base_url 필수, api_version은 미지정 시 기본값 사용)
         // auto azure_client = llm_client::LLMClientFactory::create(

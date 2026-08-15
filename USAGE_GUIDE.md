@@ -96,8 +96,8 @@ target_link_libraries(my_app PRIVATE llm_client)
 두 연동 방식 중 어떤 방식을 사용하든, 코드 상에서의 사용법은 동일합니다.
 
 `LLMClientFactory::create(provider, api_key, base_url = "", api_version = "")`의 `provider`로는
-`"openai"`, `"azure"`, `"ollama"`, `"custom"`을 지정할 수 있습니다
-(`azure`/`custom`은 `base_url`이 필수입니다).
+`"openai"`, `"azure"`, `"ollama"`, `"onnx"`, `"custom"`을 지정할 수 있습니다
+(`azure`/`custom`은 `base_url`이 필수이며, `onnx`는 `base_url`에 모델 파일 경로를 전달합니다).
 
 ```cpp
 #include "llm_client/llm_client_factory.hpp"
@@ -119,6 +119,11 @@ int main() {
 
         // 3. Ollama 예제 (로컬 서버, API 키 불필요)
         // auto client = llm_client::LLMClientFactory::create("ollama", "");
+
+        // 4. 로컬 ONNX 모델 예제 (base_url에 모델 경로, api_version에 토크나이저 경로 지정)
+        // auto client = llm_client::LLMClientFactory::create(
+        //     "onnx", "", "/path/to/model.onnx", "/path/to/tokenizer.json"
+        // );
 
         llm_client::RequestParams params;
         params.max_tokens = 512;
